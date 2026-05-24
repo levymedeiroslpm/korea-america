@@ -1,0 +1,12 @@
+{
+  "name": "bot-fac-rp",
+  "version": "1.0.0",
+  "description": "Bot Discord RP - Sistema de SET + Parceria",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.15.3"
+  }
+}
