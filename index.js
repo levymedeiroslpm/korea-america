@@ -37,7 +37,9 @@ const GUILD_ID = '1505576877505646702';
 
 const CARGO_STAFF = '1505576877505646711';
 
-// COLOCA OS IDS REAIS
+const CANAL_PARCERIA = '1505576878541635651';
+
+// CARGOS
 const CARGO_SEM_CARGO = '1505576877505646703';
 const CARGO_MEMBRO = '1505576877505646707';
 
@@ -63,11 +65,61 @@ const client = new Client({
 
 const commands = [
 
+    // ===========================
+    // /SET
+    // ===========================
+
     new SlashCommandBuilder()
 
     .setName('set')
 
     .setDescription('Enviar painel de set'),
+
+    // ===========================
+    // /PARCERIA
+    // ===========================
+
+    new SlashCommandBuilder()
+
+    .setName('parceria')
+
+    .setDescription('Enviar parceria')
+
+    .addStringOption(option =>
+
+        option
+
+        .setName('localizacao')
+
+        .setDescription('Localização da fac')
+
+        .setRequired(true)
+
+    )
+
+    .addStringOption(option =>
+
+        option
+
+        .setName('familia')
+
+        .setDescription('Nome da família')
+
+        .setRequired(true)
+
+    )
+
+    .addAttachmentOption(option =>
+
+        option
+
+        .setName('foto')
+
+        .setDescription('Foto da fac')
+
+        .setRequired(true)
+
+    )
 
 ].map(command => command.toJSON());
 
@@ -141,10 +193,14 @@ client.on(Events.GuildMemberAdd, async member => {
 client.on(Events.InteractionCreate, async interaction => {
 
     // ===========================
-    // COMANDO /SET
+    // COMANDOS
     // ===========================
 
     if (interaction.isChatInputCommand()) {
+
+        // =======================
+        // /SET
+        // =======================
 
         if (interaction.commandName === 'set') {
 
@@ -185,6 +241,83 @@ client.on(Events.InteractionCreate, async interaction => {
             return interaction.reply({
 
                 content: '✅ Painel enviado.',
+                ephemeral: true
+
+            });
+
+        }
+
+        // =======================
+        // /PARCERIA
+        // =======================
+
+        if (interaction.commandName === 'parceria') {
+
+            const localizacao =
+            interaction.options.getString('localizacao');
+
+            const familia =
+            interaction.options.getString('familia');
+
+            const foto =
+            interaction.options.getAttachment('foto');
+
+            const canal =
+            interaction.guild.channels.cache.get(CANAL_PARCERIA);
+
+            if (!canal) {
+
+                return interaction.reply({
+
+                    content:
+                    '❌ Canal de parceria não encontrado.',
+
+                    ephemeral: true
+
+                });
+
+            }
+
+            const embed = new EmbedBuilder()
+
+            .setTitle('🤝 NOVA PARCERIA')
+
+            .addFields(
+
+                {
+                    name: '📍 Localização',
+                    value: localizacao
+                },
+
+                {
+                    name: '👥 Família',
+                    value: familia
+                }
+
+            )
+
+            .setImage(foto.url)
+
+            .setColor('DarkRed')
+
+            .setFooter({
+
+                text:
+                `Parceria enviada por ${interaction.user.username}`
+
+            });
+
+            canal.send({
+
+                embeds: [embed]
+
+            });
+
+            interaction.reply({
+
+                content:
+                '✅ Parceria enviada.',
+
                 ephemeral: true
 
             });
