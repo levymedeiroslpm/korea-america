@@ -25,7 +25,7 @@ const {
 // CONFIG
 // ===============================
 
-const TOKEN = 'const TOKEN = process.env.TOKEN;';
+const TOKEN = process.env.TOKEN;
 const CLIENT_ID = '1507961405545119814';
 const GUILD_ID = '1505576877505646702';
 
