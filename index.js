@@ -25,7 +25,7 @@ const {
 // CONFIG
 // ===============================
 
-const TOKEN = 'MTUwNzk2MTQwNTU0NTExOTgxNA.GPD7ge.VKBj_dnq4QnHInVrBV-fMWj6ad8ioqmBXbP_hU';
+const TOKEN = 'const TOKEN = process.env.TOKEN;';
 const CLIENT_ID = 'ID_DO_BOT';
 const GUILD_ID = 'ID_DO_SERVIDOR';
 
