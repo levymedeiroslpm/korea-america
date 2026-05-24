@@ -1,5 +1,5 @@
 // ===============================
-// BOT FAC RP - SET + PARCERIA
+// BOT FAC RP - SISTEMA COMPLETO
 // ===============================
 
 const {
@@ -18,7 +18,12 @@ const {
     Routes,
 
     ChannelType,
-    PermissionFlagsBits
+    PermissionFlagsBits,
+
+    ModalBuilder,
+    TextInputBuilder,
+    TextInputStyle
+
 } = require('discord.js');
 
 // ===============================
@@ -26,19 +31,22 @@ const {
 // ===============================
 
 const TOKEN = process.env.TOKEN;
+
 const CLIENT_ID = '1507961405545119814';
 const GUILD_ID = '1505576877505646702';
 
-const CANAL_SET = '1505576877517967423';
-const CANAL_PARCERIA = '1505576878541635651';
-
 const CARGO_STAFF = '1505576877505646711';
+
+// COLOCA OS IDS REAIS
+const CARGO_SEM_CARGO = '1505576877505646703';
+const CARGO_MEMBRO = '1505576877505646707';
 
 // ===============================
 // CLIENT
 // ===============================
 
 const client = new Client({
+
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMembers,
@@ -46,39 +54,20 @@ const client = new Client({
     ],
 
     partials: [Partials.Channel]
+
 });
 
 // ===============================
-// COMANDO /PARCERIA
+// COMANDOS
 // ===============================
 
 const commands = [
 
     new SlashCommandBuilder()
 
-    .setName('parceria')
-    .setDescription('Enviar parceria')
+    .setName('set')
 
-    .addStringOption(option =>
-        option
-        .setName('localizacao')
-        .setDescription('Localização da fac')
-        .setRequired(true)
-    )
-
-    .addStringOption(option =>
-        option
-        .setName('familia')
-        .setDescription('Nome da família')
-        .setRequired(true)
-    )
-
-    .addAttachmentOption(option =>
-        option
-        .setName('foto')
-        .setDescription('Foto da fac')
-        .setRequired(true)
-    )
+    .setDescription('Enviar painel de set'),
 
 ].map(command => command.toJSON());
 
@@ -95,18 +84,22 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
         console.log('Registrando comandos...');
 
         await rest.put(
+
             Routes.applicationGuildCommands(
                 CLIENT_ID,
                 GUILD_ID
             ),
 
             { body: commands }
+
         );
 
         console.log('Comandos registrados.');
 
     } catch (error) {
+
         console.log(error);
+
     }
 
 })();
@@ -127,41 +120,17 @@ client.once(Events.ClientReady, () => {
 
 client.on(Events.GuildMemberAdd, async member => {
 
-    const canal = member.guild.channels.cache.get(CANAL_SET);
+    try {
 
-    if (!canal) return;
+        await member.roles.add(CARGO_SEM_CARGO);
 
-    const embed = new EmbedBuilder()
+        console.log(`${member.user.tag} recebeu SEM CARGO`);
 
-    .setTitle('📌 SOLICITAR SET')
+    } catch (err) {
 
-    .setDescription(
+        console.log(err);
 
-        `Bem-vindo ${member}\n\n` +
-        `Clique no botão abaixo para solicitar sua setagem.`
-
-    )
-
-    .setColor('DarkRed');
-
-    const row = new ActionRowBuilder()
-
-    .addComponents(
-
-        new ButtonBuilder()
-
-        .setCustomId('solicitar_set')
-
-        .setLabel('SOLICITAR SET')
-
-        .setStyle(ButtonStyle.Danger)
-
-    );
-
-    canal.send({
-        embeds: [embed],
-        components: [row]
-    });
+    }
 
 });
 
@@ -172,14 +141,151 @@ client.on(Events.GuildMemberAdd, async member => {
 client.on(Events.InteractionCreate, async interaction => {
 
     // ===========================
-    // BOTÃO SOLICITAR SET
+    // COMANDO /SET
+    // ===========================
+
+    if (interaction.isChatInputCommand()) {
+
+        if (interaction.commandName === 'set') {
+
+            const embed = new EmbedBuilder()
+
+            .setTitle('📌 SOLICITAR SET')
+
+            .setDescription(
+
+                `Clique no botão abaixo para solicitar sua setagem.\n\n` +
+                `Preencha corretamente as informações.`
+
+            )
+
+            .setColor('DarkRed');
+
+            const row = new ActionRowBuilder()
+
+            .addComponents(
+
+                new ButtonBuilder()
+
+                .setCustomId('solicitar_set')
+
+                .setLabel('SOLICITAR SET')
+
+                .setStyle(ButtonStyle.Danger)
+
+            );
+
+            await interaction.channel.send({
+
+                embeds: [embed],
+                components: [row]
+
+            });
+
+            return interaction.reply({
+
+                content: '✅ Painel enviado.',
+                ephemeral: true
+
+            });
+
+        }
+
+    }
+
+    // ===========================
+    // BOTÕES
     // ===========================
 
     if (interaction.isButton()) {
 
+        // =======================
+        // SOLICITAR SET
+        // =======================
+
         if (interaction.customId === 'solicitar_set') {
 
-            const canal = await interaction.guild.channels.create({
+            const modal = new ModalBuilder()
+
+            .setCustomId('modal_set')
+
+            .setTitle('Solicitação de Set');
+
+            const nomeInput = new TextInputBuilder()
+
+            .setCustomId('nome_jogo')
+
+            .setLabel('Nome no jogo')
+
+            .setStyle(TextInputStyle.Short)
+
+            .setRequired(true);
+
+            const idInput = new TextInputBuilder()
+
+            .setCustomId('id_jogo')
+
+            .setLabel('ID do jogo')
+
+            .setStyle(TextInputStyle.Short)
+
+            .setRequired(true);
+
+            const row1 =
+            new ActionRowBuilder().addComponents(nomeInput);
+
+            const row2 =
+            new ActionRowBuilder().addComponents(idInput);
+
+            modal.addComponents(row1, row2);
+
+            return await interaction.showModal(modal);
+
+        }
+
+        // =======================
+        // APROVAR
+        // =======================
+
+        if (interaction.customId.startsWith('aprovar_')) {
+
+            const userId =
+            interaction.customId.split('_')[1];
+
+            const membro =
+            await interaction.guild.members.fetch(userId);
+
+            await membro.roles.remove(CARGO_SEM_CARGO);
+
+            await membro.roles.add(CARGO_MEMBRO);
+
+            await interaction.reply({
+
+                content:
+                `✅ ${membro} foi aprovado e liberado.`
+
+            });
+
+        }
+
+    }
+
+    // ===========================
+    // MODAL
+    // ===========================
+
+    if (interaction.isModalSubmit()) {
+
+        if (interaction.customId === 'modal_set') {
+
+            const nome =
+            interaction.fields.getTextInputValue('nome_jogo');
+
+            const id =
+            interaction.fields.getTextInputValue('id_jogo');
+
+            const canal =
+            await interaction.guild.channels.create({
 
                 name: `set-${interaction.user.username}`,
 
@@ -189,7 +295,10 @@ client.on(Events.InteractionCreate, async interaction => {
 
                     {
                         id: interaction.guild.id,
-                        deny: [PermissionFlagsBits.ViewChannel]
+
+                        deny: [
+                            PermissionFlagsBits.ViewChannel
+                        ]
                     },
 
                     {
@@ -218,99 +327,51 @@ client.on(Events.InteractionCreate, async interaction => {
 
             .setTitle('📌 NOVA SOLICITAÇÃO')
 
-            .setDescription(
+            .addFields(
 
-                `Usuário: ${interaction.user}\n\n` +
-                `Aguardando aprovação da staff.`
+                {
+                    name: '👤 Nome no jogo',
+                    value: nome
+                },
+
+                {
+                    name: '🆔 ID do jogo',
+                    value: id
+                }
 
             )
 
             .setColor('Red');
 
+            const row = new ActionRowBuilder()
+
+            .addComponents(
+
+                new ButtonBuilder()
+
+                .setCustomId(`aprovar_${interaction.user.id}`)
+
+                .setLabel('APROVAR')
+
+                .setStyle(ButtonStyle.Success)
+
+            );
+
             canal.send({
 
                 content: `<@&${CARGO_STAFF}>`,
-                embeds: [embed]
+
+                embeds: [embed],
+
+                components: [row]
 
             });
 
             interaction.reply({
 
-                content: `✅ Ticket criado: ${canal}`,
-                ephemeral: true
+                content:
+                `✅ Solicitação enviada para staff.`,
 
-            });
-
-        }
-
-    }
-
-    // ===========================
-    // COMANDO /PARCERIA
-    // ===========================
-
-    if (interaction.isChatInputCommand()) {
-
-        if (interaction.commandName === 'parceria') {
-
-            const localizacao =
-            interaction.options.getString('localizacao');
-
-            const familia =
-            interaction.options.getString('familia');
-
-            const foto =
-            interaction.options.getAttachment('foto');
-
-            const canal =
-            interaction.guild.channels.cache.get(CANAL_PARCERIA);
-
-            if (!canal) {
-
-                return interaction.reply({
-
-                    content: '❌ Canal de parceria não encontrado.',
-                    ephemeral: true
-
-                });
-
-            }
-
-            const embed = new EmbedBuilder()
-
-            .setTitle('🤝 NOVA PARCERIA')
-
-            .addFields(
-
-                {
-                    name: '📍 Localização',
-                    value: localizacao
-                },
-
-                {
-                    name: '👥 Família',
-                    value: familia
-                }
-
-            )
-
-            .setImage(foto.url)
-
-            .setColor('DarkRed')
-
-            .setFooter({
-
-                text: `Parceria enviada por ${interaction.user.username}`
-
-            });
-
-            canal.send({
-                embeds: [embed]
-            });
-
-            interaction.reply({
-
-                content: '✅ Parceria enviada.',
                 ephemeral: true
 
             });
