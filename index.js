@@ -26,13 +26,13 @@ const {
 // ===============================
 
 const TOKEN = 'const TOKEN = process.env.TOKEN;';
-const CLIENT_ID = 'ID_DO_BOT';
-const GUILD_ID = 'ID_DO_SERVIDOR';
+const CLIENT_ID = '1507961405545119814';
+const GUILD_ID = '1505576877505646702';
 
-const CANAL_SET = 'ID_CANAL_SET';
-const CANAL_PARCERIA = 'ID_CANAL_PARCERIA';
+const CANAL_SET = '1505576877517967423';
+const CANAL_PARCERIA = '1505576878541635651';
 
-const CARGO_STAFF = 'ID_CARGO_STAFF';
+const CARGO_STAFF = '1505576877505646711';
 
 // ===============================
 // CLIENT
